@@ -7,9 +7,10 @@
     {% endif %}
   </head>
   <body>
-    <div>Microblog:
+    <div>Project:
         <a href="{{ url_for('index') }}">Home</a>
         {% if g.user.is_authenticated() %}
+        <li><a href="{{ url_for('user') }}">Profile</a></li>
         | <a href="{{ url_for('logout') }}">Logout</a>
         {% endif %}
     </div>

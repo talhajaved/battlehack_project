@@ -2,15 +2,15 @@ from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, \
     login_required
 from app import app, db, lm
-from .forms import LoginForm
-from .models import User
+from .forms import EditProfileForm, SelectAppointmentForm
+from .models import Doctor, Appointment
 from oauth import OAuthSignIn
 
 
 
 @lm.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return Doctor.query.get(int(id))
 
 @app.before_request
 def before_request():
@@ -49,13 +49,13 @@ def oauth_callback(provider):
     if social_id is None:
         flash('Authentication failed.')
         return redirect(url_for('index'))
-    user = User.query.filter_by(social_id=social_id).first()
+    user = Doctor.query.filter_by(social_id=social_id).first()
     if not user:
-        user = User(social_id=social_id, username=username, email=email)
+        user = Doctor(social_id=social_id, username=username, name=username, email=email)
         db.session.add(user)
         db.session.commit()
         login_user(user, True)
-        return redirect(url_for('edit_profile'))
+        return redirect(url_for('.edit_profile'))
     login_user(user, True)
     return redirect(url_for('index'))
 
@@ -82,23 +82,41 @@ def index():
                            user=user,
                            posts=posts)
 
-@app.route('/user/<username>')
+@app.route('/user/')
 @login_required
-def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
+def user():
+    user = g.user
     return render_template('user.html', user=user)
 
-@main.route('/edit-profile', methods=['GET', 'POST'])
+@app.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
     form = EditProfileForm()
     if form.validate_on_submit():
         current_user.name = form.name.data
+        current_user.email = form.email.data
+        current_user.phone_number = form.phone_number.data
+        current_user.speciality = form.speciality.data
         db.session.add(current_user)
+        db.session.commit()
         flash('Your profile has been updated.')
-        return redirect(url_for('.user', username=current_user.username))
+        return redirect(url_for('.user'))
     form.name.data = current_user.name
     form.email.data = current_user.email
     form.name.speciality = current_user.speciality
     form.name.phone_number = current_user.phone_number
     return render_template('edit_profile.html', form=form)
+
+@app.route('/appointment/<int:id>', methods=['GET', 'POST'])
+@login_required
+def appointment(id):
+    appointment = Appointment.query.get_or_404(id)
+    form = SelectAppointmentForm()
+    if form.validate_on_submit():
+        appointment.status = "Scheduled"
+        appointment.appointment_time = form.name.appointment_time
+        db.session.add(appointment)
+        db.session.commit()
+        flash('Appointment has been scheduled.')
+        return redirect(url_for('.post', id=post.id))
+    return render_template('appointment.html', appointment=[appointment], form=form)
