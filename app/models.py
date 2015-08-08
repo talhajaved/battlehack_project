@@ -6,38 +6,31 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     social_id = db.Column(db.String(64), nullable=False, unique=True)
     nickname = db.Column(db.String(64), nullable=False)
+    name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(64), nullable=True)
+    phone_number = db.Column(db.String(64), nullable=True)
+    speciality = db.Column(db.String(64), nullable=False)
 
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     nickname = db.Column(db.String(64), index=True, unique=True)
-#     email = db.Column(db.String(120), index=True, unique=True)
-#     posts = db.relationship('Post', backref='author', lazy='dynamic')
+class Patient(db.Model):
+    __tablename__ = 'patient'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    phone_number = db.Column(db.String(64), nullable=True)
 
-#     def is_authenticated(self):
-#         return True
-
-#     def is_active(self):
-#         return True
-
-#     def is_anonymous(self):
-#         return False
-
-#     def get_id(self):
-#         try:
-#             return unicode(self.id)  # python 2
-#         except NameError:
-#             return str(self.id)  # python 3
-
-#     def __repr__(self):
-#         return '<User %r>' % (self.nickname)
+class Appointment(UserMixin, db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(64), nullable=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
+    doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
-# class Post(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     body = db.Column(db.String(140))
-#     timestamp = db.Column(db.DateTime)
-#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-#     def __repr__(self):
-#         return '<Post %r>' % (self.body)
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String(140))
+    timestamp = db.Column(db.DateTime)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __repr__(self):
+        return '<Post %r>' % (self.body)

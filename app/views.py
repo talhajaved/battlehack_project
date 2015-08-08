@@ -12,10 +12,18 @@ from oauth import OAuthSignIn
 def load_user(id):
     return User.query.get(int(id))
 
+@app.before_request
+def before_request():
+    g.user = current_user
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+
+''' OAuth Login Views '''
+
+@app.route('/login')
+def login():
+    if g.user is not None and g.user.is_authenticated():
+        return redirect(url_for('index'))
+    return render_template('login.html')
 
 
 @app.route('/logout')
@@ -43,13 +51,54 @@ def oauth_callback(provider):
         return redirect(url_for('index'))
     user = User.query.filter_by(social_id=social_id).first()
     if not user:
-        user = User(social_id=social_id, nickname=username, email=email)
+        user = User(social_id=social_id, username=username, email=email)
         db.session.add(user)
         db.session.commit()
+        login_user(user, True)
+        return redirect(url_for('edit_profile'))
     login_user(user, True)
     return redirect(url_for('index'))
 
+''' OAuth Login Views End '''
 
-if __name__ == '__main__':
-    db.create_all()
-    app.run(debug=True)
+
+@app.route('/')
+@app.route('/index')
+@login_required
+def index():
+    user = g.user
+    posts = [
+        {
+            'author': {'username': 'John'},
+            'body': 'Beautiful day in Portland!'
+        },
+        {
+            'author': {'username': 'Susan'},
+            'body': 'The Avengers movie was so cool!'
+        }
+    ]
+    return render_template('index.html',
+                           title='Home',
+                           user=user,
+                           posts=posts)
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    return render_template('user.html', user=user)
+
+@main.route('/edit-profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.name = form.name.data
+        db.session.add(current_user)
+        flash('Your profile has been updated.')
+        return redirect(url_for('.user', username=current_user.username))
+    form.name.data = current_user.name
+    form.email.data = current_user.email
+    form.name.speciality = current_user.speciality
+    form.name.phone_number = current_user.phone_number
+    return render_template('edit_profile.html', form=form)
