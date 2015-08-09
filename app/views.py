@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, \
     login_required
 from app import app, db, lm
-from .forms import EditProfileForm, SelectAppointmentForm
+from .forms import EditProfileForm, SelectAppointmentForm, AppointmentCompletedForm
 from .models import Doctor, Appointment
 from oauth import OAuthSignIn
 
@@ -68,18 +68,8 @@ def oauth_callback(provider):
 def index():
     user = g.user
 
-    query = Appointment.query
+    query = Appointment.query.filter(Appointment.status == "Pending")
     appointments = query.order_by(Appointment.timestamp.desc())
-    posts = [
-        {
-            'author': {'username': 'John'},
-            'body': 'Beautiful day in Portland!'
-        },
-        {
-            'author': {'username': 'Susan'},
-            'body': 'The Avengers movie was so cool!'
-        }
-    ]
     return render_template('index.html',
                            title='Home',
                            user=user,
@@ -89,7 +79,12 @@ def index():
 @login_required
 def user():
     user = g.user
-    return render_template('user.html', user=user)
+    scheduled_query = Appointment.query.filter(Appointment.status == "Scheduled")
+    scheduled_appointments = scheduled_query.order_by(Appointment.timestamp.desc())
+    completed_query = Appointment.query.filter(Appointment.status == "Completed")
+    completed_appointments = completed_query.order_by(Appointment.timestamp.desc())
+    return render_template('user.html', user=user, 
+        scheduled_appointments=scheduled_appointments, completed_appointments=completed_appointments)
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
 @login_required
@@ -114,14 +109,33 @@ def edit_profile():
 @login_required
 def appointment(id):
     appointment = Appointment.query.get_or_404(id)
-    print appointment
-    print appointment
-    form = SelectAppointmentForm()
-    if form.validate_on_submit():
-        appointment.status = "Scheduled"
-        appointment.appointment_time = form.name.appointment_time
-        db.session.add(appointment)
-        db.session.commit()
-        flash('Appointment has been scheduled.')
-        return redirect(url_for('.post', id=post.id))
-    return render_template('appointment.html', appointment=appointment, form=form)
+    if appointment.status == "Pending":
+        form = SelectAppointmentForm()
+        if form.validate_on_submit():
+            appointment.status = "Scheduled"
+            appointment.appointment_time = form.appointment_time.data
+            db.session.add(appointment)
+            db.session.commit()
+            flash('Appointment has been scheduled.')
+            return redirect(url_for('.appointment', id=appointment.id))
+        return render_template('appointment.html', appointment=appointment, form=form)
+    elif appointment.status == "Scheduled":
+        form = AppointmentCompletedForm()
+        if form.validate_on_submit():
+            appointment.status = "Completed"
+            db.session.add(appointment)
+            db.session.commit()
+            flash('Appointment has been completed.')
+            return redirect(url_for('.appointment', id=appointment.id))
+        return render_template('appointment.html', appointment=appointment, form=form)
+    else:
+        return render_template('appointment.html', appointment=appointment)
+    
+# Twilio     
+@app.route("/twilio/", methods=['GET', 'POST'])
+def twilio():
+    """Respond to incoming calls with a simple text message."""
+ 
+    resp = twilio.twiml.Response()
+    resp.message("Hello, Mobile Monkey")
+    return str(resp)

@@ -19,5 +19,26 @@
         </p>
     </div>
 </div>
+
+<ul class="scheduled_appointments">
+<h2>Scheduled Appointments</h2>
+    {% for appointment in scheduled_appointments %}
+        <a href="{{ url_for('.appointment', id=appointment.id) }}"><div class="well appointment-content">
+            <div class="appointment-patient">Patient: {{ appointment.patient.name }}</div>
+            <div class="appointment-patient">Appointment Time: {{ appointment.appointment_time }}</div>
+        </div></a>
+    {% endfor %}
+</ul>
+<br>
+<ul class="completed_appointments">
+<h2>Completed Appointments</h2>
+    {% for appointment in completed_appointments %}
+        <a href="{{ url_for('.appointment', id=appointment.id) }}"><div class="well appointment-content">
+            <div class="appointment-patient">Patient: {{ appointment.patient.name }}</div>
+            <div class="appointment-patient">Appointment Time: {{ appointment.appointment_time}}</div>
+        </div></a>
+    {% endfor %}
+</ul>
+
 {% endblock %}
 
