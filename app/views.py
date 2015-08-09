@@ -67,6 +67,9 @@ def oauth_callback(provider):
 @login_required
 def index():
     user = g.user
+
+    query = Appointment.query
+    appointments = query.order_by(Appointment.timestamp.desc())
     posts = [
         {
             'author': {'username': 'John'},
@@ -80,7 +83,7 @@ def index():
     return render_template('index.html',
                            title='Home',
                            user=user,
-                           posts=posts)
+                           appointments=appointments)
 
 @app.route('/user/')
 @login_required
@@ -111,6 +114,8 @@ def edit_profile():
 @login_required
 def appointment(id):
     appointment = Appointment.query.get_or_404(id)
+    print appointment
+    print appointment
     form = SelectAppointmentForm()
     if form.validate_on_submit():
         appointment.status = "Scheduled"
@@ -119,4 +124,4 @@ def appointment(id):
         db.session.commit()
         flash('Appointment has been scheduled.')
         return redirect(url_for('.post', id=post.id))
-    return render_template('appointment.html', appointment=[appointment], form=form)
+    return render_template('appointment.html', appointment=appointment, form=form)

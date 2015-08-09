@@ -3,14 +3,18 @@
 
 {% block title %}NYUAD Market - Appointment{% endblock %}
 
-{% block page_content %}
-{% include '_appointments.html' %}
+{% block content %}
+
+<div class="appointment-content">
+    <div class="appointment-patient">Patient: {{ appointment.patient.name }}</div>
+</div>
+
 <h4 id="schedule">Schedule</h4>
 <div class="schedule-form">
     {{ wtf.quick_form(form) }}
 </div>
 
-{% for call in phone_calls %}
+{% for call in appointment.phone_calls %}
 <li class="appointment">
     <div class="phone-call-content">
         <div>Date {{ call.timestamp }}</div>

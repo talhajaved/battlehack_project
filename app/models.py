@@ -23,18 +23,17 @@ class Patient(db.Model):
     age = db.Column(db.String(64), nullable=False)
     gender = db.Column(db.String(64), nullable=False)
     appointments = db.relationship('Appointment', backref='patient', lazy='dynamic')
-    phone_calls = db.relationship('PatientPhoneCalls', backref='patient', lazy='dynamic')
+    phone_calls = db.relationship('PhoneCalls', backref='patient', lazy='dynamic')
 
     @staticmethod
-    def generate_fake(count=100):
+    def generate_fake(count=5):
         from sqlalchemy.exc import IntegrityError
-        from random import seed, randit
+        from random import seed, randint
         import forgery_py
 
         seed()
         for i in range(count):
-            u = Patient(email=forgery_py.internet.email_address(),
-                     name=forgery_py.name.full_name(),
+            u = Patient(name=forgery_py.name.full_name(),
                      phone_number=forgery_py.forgery.address.phone(),
                      gender=forgery_py.forgery.personal.gender(),
                      age=randint(20, 40))
@@ -51,15 +50,48 @@ class Appointment(db.Model):
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'))
     appointment_time = db.Column(db.DateTime)
-    phone_calls = db.relationship('PatientPhoneCalls', backref='appointments', lazy='dynamic')
+    timestamp = db.Column(db.DateTime)
+    phone_calls = db.relationship('PhoneCalls', backref='appointments', lazy='dynamic')
 
-class PatientPhoneCalls(db.Model):
+    @staticmethod
+    def generate_fake(count=10):
+        from random import seed, randint
+        import forgery_py
+
+        seed()
+        patient_count = Patient.query.count()
+        for i in range(count):
+            p = Patient.query.offset(randint(0, patient_count - 1)).first()
+            a = Appointment(status="Pending",
+                     timestamp=forgery_py.date.date(True),
+                     patient_id=p.id)
+            db.session.add(a)
+            db.session.commit()
+
+
+class PhoneCalls(db.Model):
     __tablename__ = 'phone_calls'
     id = db.Column(db.Integer, primary_key=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     case_severity = db.Column(db.String(64), nullable=True)
     symptoms = db.Column(db.String(64), nullable=True)
-    status = db.Column(db.String(64), nullable=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
+
+    @staticmethod
+    def generate_fake(count=50):
+        from random import seed, randint
+        import forgery_py
+
+        seed()
+        appointments_count = Appointment.query.count()
+        for i in range(count):
+        	a = Appointment.query.offset(randint(0, appointments_count - 1)).first()
+        	p = a.patient_id
+        	pc = PhoneCalls(case_severity= forgery_py.forgery.lorem_ipsum.word(),
+            		symptoms=forgery_py.forgery.lorem_ipsum.sentence(),
+                     timestamp=forgery_py.date.date(True),
+                     patient_id=p,appointment_id=a.id)
+        	db.session.add(pc)
+        	db.session.commit()
 

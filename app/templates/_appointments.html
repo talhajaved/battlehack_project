@@ -2,8 +2,8 @@
     {% for appointment in appointments %}
     <li class="appointment">
         <div class="appointment-content"><a href="{{ url_for('.appointment', id=appointment.id) }}">
-            <div class="appointment-patient">Patient {{ appointment.patient.name }}</div>
-        </a>a></div>
+            <div class="appointment-patient">Patient: {{ appointment.patient.name }}</div>
+        </a></div>
     </li>
     {% endfor %}
 </ul>
