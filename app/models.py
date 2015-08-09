@@ -43,14 +43,27 @@ class Patient(db.Model):
             except IntegrityError:
                 db.session.rollback()
 
+    @staticmethod
+    def add_patient(): 
+        u=Patient(name="Amal Luiz",
+            age="47",
+            gender="Male",
+            phone_number="6463928001"
+            )
+        db.session.add(u)
+        db.session.commit()
+
+
 class Appointment(db.Model):
     __tablename__ = 'appointments'
     id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.String(64), nullable=True)
+    availability_date = db.Column(db.String(64), nullable=True)
+    availability_time = db.Column(db.String(64), nullable=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'))
     appointment_time = db.Column(db.DateTime)
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     phone_calls = db.relationship('PhoneCalls', backref='appointments', lazy='dynamic')
 
     @staticmethod
@@ -68,6 +81,15 @@ class Appointment(db.Model):
             db.session.add(a)
             db.session.commit()
 
+    @staticmethod
+    def add_appointment(): 
+        a=Appointment(patient_id=1,
+            availability_time="3 to 5 pm",
+            availability_date="2015-08-11",
+            status="Pending",
+            )
+        db.session.add(a)
+        db.session.commit()
 
 class PhoneCalls(db.Model):
     __tablename__ = 'phone_calls'
@@ -94,4 +116,18 @@ class PhoneCalls(db.Model):
                      patient_id=p,appointment_id=a.id)
         	db.session.add(pc)
         	db.session.commit()
+
+    @staticmethod
+    def add_call(): 
+        c=PhoneCalls(patient_id=1,
+            appointment_id=1,
+            symptoms="Headaches and dry throat",
+            case_severity="3",
+            )
+        db.session.add(c)
+        db.session.commit()
+
+
+
+# Recap: "Amal Luiz, thank you for calling VillageMed.  We will try to schedule an appointment for you on August 11 between 3 and 5 in the evening.  A text message will be sent to you to confirm your appointment within the next 48 hours.  We hope to get you feeling better soon.  Good bye."
 
