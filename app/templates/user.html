@@ -7,10 +7,10 @@
     <div class="profile-header">
         <h1> {{ user.username }} </h1>
         <p>
-            {{ user.name }}
-            {{ user.phone_number }}
-            {{ user.email }}
-            {{ user.speciality }}
+            Name: {{ user.name }}<br>
+            Phone#: {{ user.phone_number }}<br>
+            Email: {{ user.email }}<br>
+            Speciality: {{ user.speciality }}<br>
         </p>
         <p>
             {% if user == current_user %}
@@ -25,6 +25,7 @@
     {% for appointment in scheduled_appointments %}
         <a href="{{ url_for('.appointment', id=appointment.id) }}"><div class="well appointment-content">
             <div class="appointment-patient">Patient: {{ appointment.patient.name }}</div>
+            <div class="appointment-patient">Age: {{ appointment.patient.age }}</div>
             <div class="appointment-patient">Appointment Time: {{ appointment.appointment_time }}</div>
         </div></a>
     {% endfor %}
@@ -35,6 +36,7 @@
     {% for appointment in completed_appointments %}
         <a href="{{ url_for('.appointment', id=appointment.id) }}"><div class="well appointment-content">
             <div class="appointment-patient">Patient: {{ appointment.patient.name }}</div>
+            <div class="appointment-patient">Age: {{ appointment.patient.age }}</div>
             <div class="appointment-patient">Appointment Time: {{ appointment.appointment_time}}</div>
         </div></a>
     {% endfor %}
